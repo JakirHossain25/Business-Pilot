@@ -12,43 +12,42 @@ from PyQt6.QtGui import QIcon, QPixmap, QAction, QColor
 from datetime import datetime
 import shutil
 
-from config import (DEVELOPER_NAME, DEVELOPER_WHATSAPP, COMPANY_NAME,
-                    APP_ICON_PATH, COMPANY_LOGO_PATH)
+from config import (DEVELOPER_NAME, DEVELOPER_WHATSAPP, COMPANY_NAME, 
+                   APP_ICON_PATH, COMPANY_LOGO_PATH)
 from database import Database
 from login_dialog import ModernLoginDialog
 from branding_settings import BrandingSettings
 from dialogs import AddProductDialog, InvoiceDialog
 from widgets import DashboardWidget, ReportsWidget
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        
         # Initialize branding
         self.software_name = "Business Management Software"
-
+        
         # Initialize database
         self.db = Database()
         self.conn = self.db.conn
-
+        
         # Setup UI
         self.setup_ui()
-
+        
         # Load settings
         self.load_settings()
-
+        
         # Show login dialog
         self.show_login()
-
+    
     def setup_ui(self):
         self.setWindowTitle(f"{self.software_name} - {DEVELOPER_NAME}")
         self.setGeometry(100, 100, 1400, 800)
-
+        
         # Set application icon
         if os.path.exists(APP_ICON_PATH):
             self.setWindowIcon(QIcon(APP_ICON_PATH))
-
+        
         # Set application style
         self.setStyleSheet("""
             QMainWindow {
@@ -160,101 +159,101 @@ class MainWindow(QMainWindow):
                 color: white;
             }
         """)
-
+        
         # Create menu bar
         self.create_menu_bar()
-
+        
         # Create toolbar
         self.create_toolbar()
-
+        
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-
+        
         # Main layout
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(10, 10, 10, 10)
-
+        
         # Create tab widget
         self.tab_widget = QTabWidget()
-
+        
         # Dashboard tab
         self.dashboard = DashboardWidget(self)
         self.tab_widget.addTab(self.dashboard, "📊 Dashboard")
-
+        
         # Products tab
         self.products_tab = self.create_products_tab()
         self.tab_widget.addTab(self.products_tab, "📦 Products")
-
+        
         # Invoices tab
         self.invoices_tab = self.create_invoices_tab()
         self.tab_widget.addTab(self.invoices_tab, "🧾 Invoices")
-
+        
         # Reports tab
         self.reports_tab = ReportsWidget(self)
         self.tab_widget.addTab(self.reports_tab, "📈 Reports")
-
+        
         main_layout.addWidget(self.tab_widget)
-
+        
         # Create status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage(f"Welcome to {self.software_name}")
-
+        
         # Add developer info to status bar
         self.dev_label = QLabel(f"👨‍💻 Developed by: {DEVELOPER_NAME}")
         self.dev_label.setStyleSheet("color: #4CAF50; font-weight: bold; padding: 0 10px;")
         self.status_bar.addPermanentWidget(self.dev_label)
-
+        
         # Add current time to status bar
         self.time_label = QLabel()
         self.time_label.setStyleSheet("padding: 0 10px;")
         self.status_bar.addPermanentWidget(self.time_label)
         self.update_time()
-
+        
         # Timer for time update
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_time)
         self.timer.start(1000)
-
+    
     def update_time(self):
         """Update current time in status bar"""
         current_time = QDateTime.currentDateTime()
         self.time_label.setText(f"⏰ {current_time.toString('hh:mm:ss AP')}")
-
+    
     def create_menu_bar(self):
         menubar = self.menuBar()
-
+        
         # File menu
         file_menu = menubar.addMenu("📁 File")
-
+        
         settings_action = QAction("⚙️ Branding Settings", self)
         settings_action.triggered.connect(self.open_branding_settings)
         file_menu.addAction(settings_action)
-
+        
         file_menu.addSeparator()
-
+        
         backup_action = QAction("💾 Backup Database", self)
         backup_action.triggered.connect(self.backup_database)
         file_menu.addAction(backup_action)
-
+        
         restore_action = QAction("📂 Restore Database", self)
         restore_action.triggered.connect(self.restore_database)
         file_menu.addAction(restore_action)
-
+        
         file_menu.addSeparator()
-
+        
         exit_action = QAction("🚪 Exit", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
-
+        
         # Help menu
         help_menu = menubar.addMenu("❓ Help")
-
+        
         about_action = QAction("ℹ️ About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
-
+    
     def create_toolbar(self):
         toolbar = QToolBar()
         toolbar.setMovable(False)
@@ -281,26 +280,26 @@ class MainWindow(QMainWindow):
             }
         """)
         self.addToolBar(toolbar)
-
+        
         add_product_action = QAction("➕ Add Product", self)
         add_product_action.triggered.connect(self.add_product)
         toolbar.addAction(add_product_action)
-
+        
         create_invoice_action = QAction("📝 Create Invoice", self)
         create_invoice_action.triggered.connect(self.generate_invoice)
         toolbar.addAction(create_invoice_action)
-
+        
         toolbar.addSeparator()
-
+        
         refresh_action = QAction("🔄 Refresh", self)
         refresh_action.triggered.connect(self.refresh_data)
         toolbar.addAction(refresh_action)
-
+    
     def create_products_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setSpacing(10)
-
+        
         # Search bar
         search_widget = QWidget()
         search_widget.setStyleSheet("""
@@ -312,11 +311,11 @@ class MainWindow(QMainWindow):
         """)
         search_layout = QHBoxLayout(search_widget)
         search_layout.setContentsMargins(10, 5, 10, 5)
-
+        
         search_label = QLabel("🔍 Search:")
         search_label.setStyleSheet("font-weight: bold; color: #4CAF50;")
         search_layout.addWidget(search_label)
-
+        
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search products by name...")
         self.search_input.textChanged.connect(self.search_products)
@@ -328,14 +327,14 @@ class MainWindow(QMainWindow):
             }
         """)
         search_layout.addWidget(self.search_input)
-
+        
         search_btn = QPushButton("Search")
         search_btn.clicked.connect(self.search_products)
         search_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         search_layout.addWidget(search_btn)
-
+        
         layout.addWidget(search_widget)
-
+        
         # Products table
         self.products_table = QTableWidget()
         self.products_table.setColumnCount(6)
@@ -346,47 +345,47 @@ class MainWindow(QMainWindow):
         self.products_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.products_table.setAlternatingRowColors(True)
         layout.addWidget(self.products_table)
-
+        
         # Buttons
         button_widget = QWidget()
         button_layout = QHBoxLayout(button_widget)
         button_layout.setContentsMargins(0, 0, 0, 0)
-
+        
         add_btn = QPushButton("➕ Add Product")
         add_btn.clicked.connect(self.add_product)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         button_layout.addWidget(add_btn)
-
+        
         edit_btn = QPushButton("✏️ Edit Product")
         edit_btn.clicked.connect(self.edit_product)
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         button_layout.addWidget(edit_btn)
-
+        
         delete_btn = QPushButton("🗑️ Delete Product")
         delete_btn.clicked.connect(self.delete_product)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         delete_btn.setStyleSheet("background-color: #f44336;")
         button_layout.addWidget(delete_btn)
-
+        
         button_layout.addStretch()
-
+        
         stock_alert_btn = QPushButton("⚠️ Stock Alert")
         stock_alert_btn.clicked.connect(self.check_stock_alert)
         stock_alert_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         stock_alert_btn.setStyleSheet("background-color: #FF9800;")
         button_layout.addWidget(stock_alert_btn)
-
+        
         layout.addWidget(button_widget)
-
+        
         self.load_products()
-
+        
         return widget
-
+    
     def create_invoices_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setSpacing(10)
-
+        
         # Invoice creation area
         create_group = QGroupBox("📝 Create New Invoice")
         create_group.setStyleSheet("""
@@ -396,34 +395,34 @@ class MainWindow(QMainWindow):
             }
         """)
         create_layout = QVBoxLayout(create_group)
-
+        
         # Product selection
         product_widget = QWidget()
         product_layout = QHBoxLayout(product_widget)
         product_layout.setContentsMargins(0, 0, 0, 0)
-
+        
         product_label = QLabel("Select Product:")
         product_label.setStyleSheet("font-weight: bold;")
         product_layout.addWidget(product_label)
-
+        
         self.invoice_product = QComboBox()
         self.invoice_product.setMinimumWidth(200)
         product_layout.addWidget(self.invoice_product)
-
+        
         product_layout.addSpacing(20)
-
+        
         quantity_label = QLabel("Quantity:")
         quantity_label.setStyleSheet("font-weight: bold;")
         product_layout.addWidget(quantity_label)
-
+        
         self.invoice_quantity = QSpinBox()
         self.invoice_quantity.setRange(1, 999)
         self.invoice_quantity.setValue(1)
         self.invoice_quantity.setMinimumWidth(80)
         product_layout.addWidget(self.invoice_quantity)
-
+        
         product_layout.addStretch()
-
+        
         add_to_invoice_btn = QPushButton("➕ Add to Invoice")
         add_to_invoice_btn.clicked.connect(self.add_to_invoice)
         add_to_invoice_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -437,9 +436,9 @@ class MainWindow(QMainWindow):
             }
         """)
         product_layout.addWidget(add_to_invoice_btn)
-
+        
         create_layout.addWidget(product_widget)
-
+        
         # Invoice items table
         self.invoice_items_table = QTableWidget()
         self.invoice_items_table.setColumnCount(5)
@@ -449,20 +448,20 @@ class MainWindow(QMainWindow):
         self.invoice_items_table.horizontalHeader().setStretchLastSection(True)
         self.invoice_items_table.setAlternatingRowColors(True)
         create_layout.addWidget(self.invoice_items_table)
-
+        
         # Buttons and total
         bottom_widget = QWidget()
         bottom_layout = QHBoxLayout(bottom_widget)
         bottom_layout.setContentsMargins(0, 0, 0, 0)
-
+        
         remove_item_btn = QPushButton("🗑️ Remove Selected Item")
         remove_item_btn.clicked.connect(self.remove_invoice_item)
         remove_item_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         remove_item_btn.setStyleSheet("background-color: #f44336;")
         bottom_layout.addWidget(remove_item_btn)
-
+        
         bottom_layout.addStretch()
-
+        
         self.invoice_total = QLabel("Total Profit: $0.00")
         self.invoice_total.setStyleSheet("""
             QLabel {
@@ -475,9 +474,9 @@ class MainWindow(QMainWindow):
             }
         """)
         bottom_layout.addWidget(self.invoice_total)
-
+        
         create_layout.addWidget(bottom_widget)
-
+        
         # Generate button
         generate_btn = QPushButton("📄 Generate Invoice")
         generate_btn.clicked.connect(self.generate_invoice)
@@ -494,9 +493,9 @@ class MainWindow(QMainWindow):
             }
         """)
         create_layout.addWidget(generate_btn)
-
+        
         layout.addWidget(create_group)
-
+        
         # Recent invoices
         recent_group = QGroupBox("📋 Recent Invoices")
         recent_group.setStyleSheet("""
@@ -506,7 +505,7 @@ class MainWindow(QMainWindow):
             }
         """)
         recent_layout = QVBoxLayout(recent_group)
-
+        
         self.invoices_table = QTableWidget()
         self.invoices_table.setColumnCount(5)
         self.invoices_table.setHorizontalHeaderLabels([
@@ -517,19 +516,19 @@ class MainWindow(QMainWindow):
         self.invoices_table.setAlternatingRowColors(True)
         self.invoices_table.doubleClicked.connect(self.view_invoice_details)
         recent_layout.addWidget(self.invoices_table)
-
+        
         layout.addWidget(recent_group)
-
+        
         self.load_products_to_combo()
         self.load_invoices()
-
+        
         return widget
-
+    
     def load_products(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM products ORDER BY id DESC")
         products = cursor.fetchall()
-
+        
         self.products_table.setRowCount(len(products))
         for row, product in enumerate(products):
             for col, value in enumerate(product):
@@ -539,7 +538,7 @@ class MainWindow(QMainWindow):
                 elif col == 4:  # Quantity column
                     item = QTableWidgetItem(str(value))
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-
+                    
                     # Color code based on quantity
                     if value < 10:
                         item.setForeground(QColor("#f44336"))  # Red for low stock
@@ -550,7 +549,7 @@ class MainWindow(QMainWindow):
                 else:
                     item = QTableWidgetItem(str(value))
                 self.products_table.setItem(row, col, item)
-
+    
     def load_products_to_combo(self):
         self.invoice_product.clear()
         cursor = self.conn.cursor()
@@ -558,18 +557,19 @@ class MainWindow(QMainWindow):
         products = cursor.fetchall()
         for product in products:
             self.invoice_product.addItem(f"{product[1]} ({product[2]} left)", product[0])
-
+    
     def load_invoices(self):
         cursor = self.conn.cursor()
         cursor.execute("""
-                       SELECT i.invoice_no, i.date, i.time, COUNT(ii.id) as items, i.total_profit
-                       FROM invoices i
-                                LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
-                       GROUP BY i.id
-                       ORDER BY i.created_at DESC LIMIT 20
-                       """)
+            SELECT i.invoice_no, i.date, i.time, COUNT(ii.id) as items, i.total_profit
+            FROM invoices i
+            LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
+            GROUP BY i.id
+            ORDER BY i.created_at DESC
+            LIMIT 20
+        """)
         invoices = cursor.fetchall()
-
+        
         self.invoices_table.setRowCount(len(invoices))
         for row, invoice in enumerate(invoices):
             for col, value in enumerate(invoice):
@@ -583,36 +583,36 @@ class MainWindow(QMainWindow):
                 else:
                     item = QTableWidgetItem(str(value))
                 self.invoices_table.setItem(row, col, item)
-
+    
     def add_product(self):
         dialog = AddProductDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             data = dialog.get_product_data()
-
+            
             cursor = self.conn.cursor()
             cursor.execute('''
-                           INSERT INTO products (name, purchase_price, selling_price, quantity, profit)
-                           VALUES (?, ?, ?, ?, ?)
-                           ''', (data['name'], data['purchase_price'], data['selling_price'],
-                                 data['quantity'], data['profit']))
+                INSERT INTO products (name, purchase_price, selling_price, quantity, profit)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (data['name'], data['purchase_price'], data['selling_price'], 
+                  data['quantity'], data['profit']))
             self.conn.commit()
-
+            
             self.load_products()
             self.load_products_to_combo()
             QMessageBox.information(self, "✅ Success", "Product added successfully!")
-
+    
     def edit_product(self):
         current_row = self.products_table.currentRow()
         if current_row < 0:
             QMessageBox.warning(self, "⚠️ Warning", "Please select a product to edit.")
             return
-
+        
         product_id = self.products_table.item(current_row, 0).text()
-
+        
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
         product = cursor.fetchone()
-
+        
         if product:
             dialog = AddProductDialog(self)
             dialog.setWindowTitle("Edit Product")
@@ -621,61 +621,57 @@ class MainWindow(QMainWindow):
             dialog.selling_price.setValue(product[3])
             dialog.quantity.setValue(product[4])
             dialog.calculate_profit()
-
+            
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 data = dialog.get_product_data()
-
+                
                 cursor.execute('''
-                               UPDATE products
-                               SET name=?,
-                                   purchase_price=?,
-                                   selling_price=?,
-                                   quantity=?,
-                                   profit=?
-                               WHERE id = ?
-                               ''', (data['name'], data['purchase_price'], data['selling_price'],
-                                     data['quantity'], data['profit'], product_id))
+                    UPDATE products 
+                    SET name=?, purchase_price=?, selling_price=?, quantity=?, profit=?
+                    WHERE id=?
+                ''', (data['name'], data['purchase_price'], data['selling_price'],
+                      data['quantity'], data['profit'], product_id))
                 self.conn.commit()
-
+                
                 self.load_products()
                 self.load_products_to_combo()
                 QMessageBox.information(self, "✅ Success", "Product updated successfully!")
-
+    
     def delete_product(self):
         current_row = self.products_table.currentRow()
         if current_row < 0:
             QMessageBox.warning(self, "⚠️ Warning", "Please select a product to delete.")
             return
-
+        
         product_name = self.products_table.item(current_row, 1).text()
-
-        reply = QMessageBox.question(self, "🗑️ Confirm Delete",
+        
+        reply = QMessageBox.question(self, "🗑️ Confirm Delete", 
                                      f"Are you sure you want to delete '{product_name}'?",
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-
+        
         if reply == QMessageBox.StandardButton.Yes:
             product_id = self.products_table.item(current_row, 0).text()
-
+            
             cursor = self.conn.cursor()
             cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
             self.conn.commit()
-
+            
             self.load_products()
             self.load_products_to_combo()
             QMessageBox.information(self, "✅ Success", "Product deleted successfully!")
-
+    
     def search_products(self):
         search_text = self.search_input.text().lower()
-
+        
         for row in range(self.products_table.rowCount()):
             product_name = self.products_table.item(row, 1).text().lower()
             self.products_table.setRowHidden(row, search_text not in product_name)
-
+    
     def check_stock_alert(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT name, quantity FROM products WHERE quantity < 10 ORDER BY quantity")
         low_stock = cursor.fetchall()
-
+        
         if low_stock:
             alert_message = "⚠️ Low Stock Alert!\n\n"
             for product in low_stock:
@@ -683,25 +679,25 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Stock Alert", alert_message)
         else:
             QMessageBox.information(self, "Stock Alert", "✅ All products have sufficient stock.")
-
+    
     def add_to_invoice(self):
         if self.invoice_product.count() == 0:
             QMessageBox.warning(self, "⚠️ Warning", "No products available with stock!")
             return
-
+            
         product_id = self.invoice_product.currentData()
         quantity = self.invoice_quantity.value()
-
+        
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
         product = cursor.fetchone()
-
+        
         if product and product[4] >= quantity:
             profit = (product[3] - product[2]) * quantity
-
+            
             row = self.invoice_items_table.rowCount()
             self.invoice_items_table.insertRow(row)
-
+            
             # Product
             item = QTableWidgetItem(product[1])
             item.setData(Qt.ItemDataRole.UserRole, {
@@ -713,126 +709,126 @@ class MainWindow(QMainWindow):
                 'profit': profit
             })
             self.invoice_items_table.setItem(row, 0, item)
-
+            
             # Quantity
             qty_item = QTableWidgetItem(str(quantity))
             qty_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.invoice_items_table.setItem(row, 1, qty_item)
-
+            
             # Purchase Price
             pp_item = QTableWidgetItem(f"${product[2]:.2f}")
             pp_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.invoice_items_table.setItem(row, 2, pp_item)
-
+            
             # Selling Price
             sp_item = QTableWidgetItem(f"${product[3]:.2f}")
             sp_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.invoice_items_table.setItem(row, 3, sp_item)
-
+            
             # Profit
             profit_item = QTableWidgetItem(f"${profit:.2f}")
             profit_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             profit_item.setForeground(QColor("#4CAF50"))
             self.invoice_items_table.setItem(row, 4, profit_item)
-
+            
             self.update_invoice_total()
         else:
             QMessageBox.warning(self, "⚠️ Warning", f"Insufficient stock! Only {product[4]} left.")
-
+    
     def remove_invoice_item(self):
         current_row = self.invoice_items_table.currentRow()
         if current_row >= 0:
             self.invoice_items_table.removeRow(current_row)
             self.update_invoice_total()
-
+    
     def update_invoice_total(self):
         total = 0
         for row in range(self.invoice_items_table.rowCount()):
             profit_item = self.invoice_items_table.item(row, 4)
             total += float(profit_item.text().replace('$', ''))
-
+        
         self.invoice_total.setText(f"Total Profit: ${total:.2f}")
-
+    
     def generate_invoice(self):
         if self.invoice_items_table.rowCount() == 0:
             QMessageBox.warning(self, "⚠️ Warning", "No items in invoice!")
             return
-
+        
         invoice_no = f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         current_date = datetime.now().strftime('%Y-%m-%d')
         current_time = datetime.now().strftime('%H:%M:%S')
-
+        
         total_profit = 0
         items = []
         for row in range(self.invoice_items_table.rowCount()):
             item_data = self.invoice_items_table.item(row, 0).data(Qt.ItemDataRole.UserRole)
             items.append(item_data)
             total_profit += item_data['profit']
-
+        
         cursor = self.conn.cursor()
-
+        
         cursor.execute('''
-                       INSERT INTO invoices (invoice_no, date, time, total_profit)
-                       VALUES (?, ?, ?, ?)
-                       ''', (invoice_no, current_date, current_time, total_profit))
-
+            INSERT INTO invoices (invoice_no, date, time, total_profit)
+            VALUES (?, ?, ?, ?)
+        ''', (invoice_no, current_date, current_time, total_profit))
+        
         invoice_id = cursor.lastrowid
-
+        
         for item in items:
             cursor.execute('''
-                           INSERT INTO invoice_items (invoice_id, product_id, name, quantity,
-                                                      purchase_price, selling_price, profit)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)
-                           ''', (invoice_id, item['id'], item['name'], item['quantity'],
-                                 item['purchase_price'], item['selling_price'], item['profit']))
-
+                INSERT INTO invoice_items (invoice_id, product_id, name, quantity, 
+                                         purchase_price, selling_price, profit)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (invoice_id, item['id'], item['name'], item['quantity'],
+                  item['purchase_price'], item['selling_price'], item['profit']))
+            
             cursor.execute('''
-                           UPDATE products
-                           SET quantity = quantity - ?
-                           WHERE id = ?
-                           ''', (item['quantity'], item['id']))
-
+                UPDATE products 
+                SET quantity = quantity - ? 
+                WHERE id = ?
+            ''', (item['quantity'], item['id']))
+        
         self.conn.commit()
-
+        
         invoice_data = {
             'invoice_no': invoice_no,
             'date': current_date,
             'time': current_time,
             'items': items
         }
-
+        
         dialog = InvoiceDialog(self, invoice_data)
         dialog.exec()
-
+        
         self.invoice_items_table.setRowCount(0)
         self.invoice_total.setText("Total Profit: $0.00")
-
+        
         self.load_products()
         self.load_products_to_combo()
         self.load_invoices()
         self.dashboard.update_dashboard()
-
+        
         QMessageBox.information(self, "✅ Success", f"Invoice {invoice_no} generated successfully!")
-
+    
     def view_invoice_details(self):
         current_row = self.invoices_table.currentRow()
         if current_row < 0:
             return
-
+        
         invoice_no = self.invoices_table.item(current_row, 0).text()
-
+        
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM invoices WHERE invoice_no = ?", (invoice_no,))
         invoice = cursor.fetchone()
-
+        
         if invoice:
             cursor.execute("""
-                           SELECT name, quantity, purchase_price, selling_price, profit
-                           FROM invoice_items
-                           WHERE invoice_id = ?
-                           """, (invoice[0],))
+                SELECT name, quantity, purchase_price, selling_price, profit
+                FROM invoice_items 
+                WHERE invoice_id = ?
+            """, (invoice[0],))
             items = cursor.fetchall()
-
+            
             invoice_items = []
             for item in items:
                 invoice_items.append({
@@ -842,35 +838,35 @@ class MainWindow(QMainWindow):
                     'selling_price': item[3],
                     'profit': item[4]
                 })
-
+            
             invoice_data = {
                 'invoice_no': invoice[1],
                 'date': invoice[2],
                 'time': invoice[3],
                 'items': invoice_items
             }
-
+            
             dialog = InvoiceDialog(self, invoice_data)
             dialog.exec()
-
+    
     def open_branding_settings(self):
         dialog = BrandingSettings(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.save_settings()
             self.status_bar.showMessage("✅ Branding settings updated successfully!", 3000)
-
+    
     def backup_database(self):
         file_path, _ = QFileDialog.getSaveFileName(self, "Backup Database", "", "Database Files (*.db)")
         if file_path:
             self.db.backup(file_path)
             QMessageBox.information(self, "✅ Success", "Database backed up successfully!")
-
+    
     def restore_database(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Restore Database", "", "Database Files (*.db)")
         if file_path:
-            reply = QMessageBox.question(self, "⚠️ Confirm Restore",
-                                         "This will overwrite current data. Continue?",
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            reply = QMessageBox.question(self, "⚠️ Confirm Restore", 
+                                        "This will overwrite current data. Continue?",
+                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 self.db.restore(file_path)
                 self.load_products()
@@ -878,7 +874,7 @@ class MainWindow(QMainWindow):
                 self.load_invoices()
                 self.dashboard.update_dashboard()
                 QMessageBox.information(self, "✅ Success", "Database restored successfully!")
-
+    
     def show_about(self):
         from config import COMPANY_NAME
         about_text = f"""
@@ -892,16 +888,16 @@ class MainWindow(QMainWindow):
             <p><i>© 2024 All rights reserved</i></p>
         </div>
         """
-
+        
         QMessageBox.about(self, "ℹ️ About", about_text)
-
+    
     def refresh_data(self):
         self.load_products()
         self.load_products_to_combo()
         self.load_invoices()
         self.dashboard.update_dashboard()
         self.status_bar.showMessage("🔄 Data refreshed successfully!", 3000)
-
+    
     def save_settings(self):
         cursor = self.conn.cursor()
         cursor.execute('''
@@ -909,50 +905,48 @@ class MainWindow(QMainWindow):
             VALUES (?, ?)
         ''', ('software_name', self.software_name))
         self.conn.commit()
-
+    
     def load_settings(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT value FROM settings WHERE key='software_name'")
         result = cursor.fetchone()
         if result:
             self.software_name = result[0]
-
+    
     def show_login(self):
         dialog = ModernLoginDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             sys.exit()
 
-
 def main():
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
-
+    
     # Set application icon
     if os.path.exists(APP_ICON_PATH):
         app.setWindowIcon(QIcon(APP_ICON_PATH))
-
+    
     # Set app ID for Windows taskbar
     try:
         myappid = f'{DEVELOPER_NAME}.BusinessManagement.1.0'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     except:
         pass
-
+    
     # Splash screen
     splash = QSplashScreen()
     splash.setPixmap(QPixmap(400, 300))
     splash.show()
-    splash.showMessage("Loading Business Management Software...",
-                       Qt.AlignmentFlag.AlignCenter, Qt.GlobalColor.black)
-
+    splash.showMessage("Loading Business Management Software...", 
+                      Qt.AlignmentFlag.AlignCenter, Qt.GlobalColor.black)
+    
     app.processEvents()
-
+    
     window = MainWindow()
     splash.finish(window)
     window.show()
-
+    
     sys.exit(app.exec())
-
 
 if __name__ == '__main__':
     main()
